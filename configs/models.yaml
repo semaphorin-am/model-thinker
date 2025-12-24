@@ -1,0 +1,115 @@
+# Model configuration defaults
+# Override per-model settings for congestion pricing analysis
+
+# Demand Response Model (Section 3.1)
+demand_response:
+  elasticity_auto: -0.3
+  elasticity_transit: 0.2
+  income_elasticity: -0.5
+  cross_elasticity: 0.15
+
+# Traffic Equilibrium Model (Section 3.2)
+equilibrium:
+  algorithm: frank_wolfe
+  max_iterations: 100
+  convergence_threshold: 0.001
+  step_size_method: msa  # modified successive averages
+  bpr_alpha: 0.15
+  bpr_beta: 4.0
+  warm_start: true
+
+# Toll Optimization Model (Section 3.3)
+optimization:
+  objective: social_welfare  # or revenue, or congestion
+  algorithm: genetic
+  population_size: 50
+  generations: 100
+  mutation_rate: 0.1
+  crossover_rate: 0.8
+  constraints:
+    max_toll: 25.0
+    min_toll: 0.0
+    equity_bound: 0.2
+
+# Game Theory Model (Section 3.4)
+game_theory:
+  game_type: stackelberg
+  n_player_types: 3
+  price_of_anarchy: true
+  compute_nash: true
+
+# Agent-Based Model (Section 3.5)
+abm:
+  n_agents: 5000
+  n_days: 100
+  learning_rate: 0.3
+  habit_strength: 0.7
+  vot_mean: 20.0
+  vot_std: 10.0
+  income_distribution: lognormal
+  bounded_rationality: true
+  social_influence: 0.1
+
+# Stochastic Model (Section 3.6)
+stochastic:
+  n_replications: 100
+  demand_cv: 0.1
+  capacity_cv: 0.05
+  incident_probability: 0.02
+  parallel: true
+  seed: 42
+
+# Dynamic/Markov Model (Section 3.7)
+dynamic:
+  n_days: 100
+  inertia: 0.7
+  logit_scale: 0.1
+  time_periods:
+    - 7
+    - 8
+    - 9
+
+# Machine Learning Model (Section 3.8)
+ml:
+  model_type: gradient_boosting
+  task: predict  # or causal
+  features:
+    - hour
+    - day_of_week
+    - toll
+    - weather
+    - event
+  target: travel_time
+  hyperparameters:
+    n_estimators: 100
+    max_depth: 5
+    learning_rate: 0.1
+
+# Systems Synthesis Model (Section 3.9)
+systems:
+  models:
+    - demand_response
+    - equilibrium
+    - abm
+  synthesis_method: mean  # or median, ensemble
+  run_sensitivity: true
+  discrepancy_threshold: 0.2
+
+# Validation settings
+validation:
+  geh_threshold: 5.0
+  geh_pass_rate: 0.85
+  holdout_fraction: 0.2
+  cross_validation_folds: 5
+
+# Parallel execution
+parallel:
+  enabled: true
+  n_jobs: -1  # Use all cores
+  backend: loky
+
+# Logging
+logging:
+  level: INFO
+  file: congestion_pricing.log
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

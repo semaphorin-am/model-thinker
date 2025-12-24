@@ -1,0 +1,70 @@
+# London Congestion Charge configuration
+# Based on Transport for London (TfL) congestion charging zone
+
+name: london_congestion_charge
+description: Central London Congestion Charge Zone analysis
+
+# Geographic bounds (WGS84)
+bounds:
+  min_lat: 51.4900
+  max_lat: 51.5300
+  min_lon: -0.1500
+  max_lon: -0.0700
+
+# Toll configuration
+toll:
+  toll_type: cordon
+  zone_name: central_london
+  periods:
+    - weekday_charging  # 07:00-18:00 Mon-Fri
+    - weekday_free      # 18:00-07:00 Mon-Fri
+    - weekend           # All day Sat-Sun
+  rates:
+    weekday_charging: 15.00  # GBP
+    weekday_free: 0.0
+    weekend: 0.0
+  exemptions:
+    - electric_vehicles
+    - disabled_badge_holders
+    - licensed_taxis
+    - buses
+    - emergency_vehicles
+
+# Transit parameters
+transit:
+  modes:
+    - tube
+    - bus
+    - dlr
+    - overground
+  average_headway_minutes:
+    tube: 3
+    bus: 5
+    dlr: 4
+    overground: 7
+  fare_zone_system: true
+
+# Demand parameters
+demand:
+  peak_hours:
+    am: [7, 8, 9]
+    pm: [17, 18, 19]
+  daily_trips_into_zone: 200000
+  mode_share_baseline:
+    auto: 0.35
+    transit: 0.55
+    walk_cycle: 0.10
+
+# Value of time (GBP/hour)
+value_of_time:
+  mean: 15.0
+  std: 7.5
+  distribution: lognormal
+
+# Data sources
+data:
+  network: tfl_road_network.gpkg
+  zones: london_msoa.geojson
+  od_matrix: london_od_2023.csv
+  gtfs: london_gtfs.zip
+  traffic_counts: tfl_counts.csv

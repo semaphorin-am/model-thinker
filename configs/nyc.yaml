@@ -1,0 +1,83 @@
+# NYC Congestion Pricing configuration
+# Manhattan Central Business District (below 60th Street)
+
+name: nyc_cbd_pricing
+description: Manhattan CBD Congestion Pricing analysis
+
+# Geographic bounds (WGS84)
+bounds:
+  min_lat: 40.7000
+  max_lat: 40.7700
+  min_lon: -74.0200
+  max_lon: -73.9700
+
+# Toll configuration
+toll:
+  toll_type: cordon
+  zone_name: manhattan_cbd
+  periods:
+    - peak              # 5am-9pm weekdays
+    - overnight         # 9pm-5am weekdays
+    - weekend_day       # 9am-9pm weekends
+    - weekend_overnight # 9pm-9am weekends
+  rates:
+    peak: 15.00         # USD
+    overnight: 3.75
+    weekend_day: 15.00
+    weekend_overnight: 3.75
+  crossing_tolls:
+    tunnels: true
+    bridges: true
+  exemptions:
+    - emergency_vehicles
+    - buses
+    - specialized_vehicles
+  credits:
+    tunnels_bridges: true  # Credit for crossing tolls
+
+# Transit parameters
+transit:
+  modes:
+    - subway
+    - bus
+    - commuter_rail
+    - ferry
+  average_headway_minutes:
+    subway: 4
+    bus: 8
+    commuter_rail: 15
+    ferry: 20
+  fare_system: metrocard
+
+# Demand parameters
+demand:
+  peak_hours:
+    am: [7, 8, 9, 10]
+    pm: [16, 17, 18, 19]
+  daily_vehicle_entries: 700000
+  mode_share_baseline:
+    auto: 0.22
+    transit: 0.65
+    taxi_fhv: 0.08
+    walk_cycle: 0.05
+
+# Value of time (USD/hour)
+value_of_time:
+  mean: 20.0
+  std: 10.0
+  distribution: lognormal
+  by_income_quintile:
+    q1: 12.0
+    q2: 15.0
+    q3: 18.0
+    q4: 22.0
+    q5: 35.0
+
+# Data sources
+data:
+  network: nyc_lion.gpkg
+  zones: nyc_nta.geojson
+  od_matrix: nyc_ctpp_od.csv
+  gtfs: mta_gtfs.zip
+  taxi_trips: nyc_tlc_trips.parquet
+  traffic_counts: nyc_dot_counts.csv

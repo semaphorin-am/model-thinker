@@ -1,0 +1,31 @@
+# Cordon pricing scenario - $15 flat rate
+# Based on NYC MTA proposal
+
+name: cordon_15
+description: $15 cordon toll for CBD entry
+
+toll:
+  toll_type: cordon
+  periods:
+    - peak
+    - off_peak
+  rates:
+    peak: 15.0
+    off_peak: 3.75
+
+transit:
+  headway_factor: 0.9  # 10% service improvement from revenue
+  fare_multiplier: 1.0
+  capacity_factor: 1.1
+
+demand_multiplier: 1.0
+
+revenue_allocation:
+  transit_investment: 0.8
+  road_maintenance: 0.1
+  administration: 0.1
+
+analysis:
+  compute_equity: true
+  compute_emissions: true
+  compare_to: baseline

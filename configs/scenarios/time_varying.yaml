@@ -1,0 +1,34 @@
+# Time-varying congestion pricing scenario
+# Higher tolls during peak hours to flatten demand
+
+name: time_varying
+description: Time-of-day variable pricing
+
+toll:
+  toll_type: time_varying
+  periods:
+    - early_am      # 5-7am
+    - am_peak       # 7-10am
+    - midday        # 10am-4pm
+    - pm_peak       # 4-7pm
+    - evening       # 7-9pm
+    - overnight     # 9pm-5am
+  rates:
+    early_am: 5.0
+    am_peak: 20.0
+    midday: 10.0
+    pm_peak: 18.0
+    evening: 8.0
+    overnight: 2.5
+
+transit:
+  headway_factor: 0.85  # 15% service improvement
+  fare_multiplier: 1.0
+  capacity_factor: 1.15
+
+demand_multiplier: 1.0
+
+analysis:
+  compute_equity: true
+  compute_emissions: true
+  time_resolution: hourly

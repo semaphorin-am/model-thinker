@@ -1,0 +1,27 @@
+# Baseline scenario (no congestion pricing)
+# Use this as a reference point for policy comparison
+
+name: baseline
+description: No congestion pricing - status quo
+
+toll: null
+
+transit:
+  headway_factor: 1.0
+  fare_multiplier: 1.0
+  capacity_factor: 1.0
+
+demand_multiplier: 1.0
+
+analysis:
+  compute_equity: true
+  compute_emissions: true
+  time_periods:
+    - am_peak
+    - pm_peak
+    - off_peak
+
+output:
+  link_flows: true
+  od_flows: true
+  mode_shares: true
