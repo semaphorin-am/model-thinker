@@ -497,6 +497,208 @@ def report(
     typer.echo(f"Report generated: {output}")
 
 
+@app.command()
+def dashboard(
+    results_path: Path = typer.Argument(
+        ...,
+        help="Path to result JSON file or directory with multiple results",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Export dashboard as HTML file",
+    ),
+    serve: bool = typer.Option(
+        False,
+        "--serve", "-s",
+        help="Start interactive dashboard server",
+    ),
+    port: int = typer.Option(
+        8050,
+        "--port", "-p",
+        help="Port for dashboard server",
+    ),
+    open_browser: bool = typer.Option(
+        True,
+        "--open/--no-open",
+        help="Open browser automatically",
+    ),
+) -> None:
+    """Launch visualization dashboard for model results.
+
+    Examples:
+        congestion-pricing dashboard results.json
+        congestion-pricing dashboard results/ --serve
+        congestion-pricing dashboard results.json -o dashboard.html
+    """
+    import json
+    import webbrowser
+
+    from congestion_pricing.policy.results import ModelResult
+    from congestion_pricing.visualization.dashboard import Dashboard
+
+    # Load results
+    results = []
+
+    if results_path.is_file():
+        typer.echo(f"Loading result from {results_path}")
+        result = ModelResult.load(results_path)
+        results.append(result)
+    elif results_path.is_dir():
+        result_files = list(results_path.glob("*.json"))
+        if not result_files:
+            typer.echo("No result files found in directory", err=True)
+            raise typer.Exit(1)
+
+        typer.echo(f"Loading {len(result_files)} results from {results_path}")
+        for rf in result_files:
+            try:
+                result = ModelResult.load(rf)
+                results.append(result)
+            except Exception as e:
+                typer.echo(f"Warning: Failed to load {rf}: {e}", err=True)
+    else:
+        typer.echo(f"Path not found: {results_path}", err=True)
+        raise typer.Exit(1)
+
+    if not results:
+        typer.echo("No valid results loaded", err=True)
+        raise typer.Exit(1)
+
+    # Create dashboard
+    typer.echo(f"Creating dashboard for {len(results)} result(s)...")
+    dash = Dashboard(results)
+    dash.generate_figures()
+
+    if output:
+        # Export as HTML
+        dash.to_html(output)
+        typer.echo(f"Dashboard exported to {output}")
+
+        if open_browser:
+            webbrowser.open(f"file://{output.absolute()}")
+
+    elif serve:
+        # Start interactive server
+        typer.echo(f"Starting dashboard server at http://127.0.0.1:{port}")
+        typer.echo("Press Ctrl+C to stop")
+
+        if open_browser:
+            webbrowser.open(f"http://127.0.0.1:{port}")
+
+        dash.serve(port=port)
+
+    else:
+        # Default: export to temp HTML and open
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".html",
+            delete=False,
+        ) as f:
+            output_path = Path(f.name)
+
+        dash.to_html(output_path)
+        typer.echo(f"Dashboard created at {output_path}")
+
+        if open_browser:
+            webbrowser.open(f"file://{output_path.absolute()}")
+
+
+@app.command()
+def visualize(
+    scenario_file: Path = typer.Argument(
+        ...,
+        help="Path to scenario YAML file",
+        exists=True,
+    ),
+    model: str = typer.Option(
+        "equilibrium",
+        "--model", "-m",
+        help="Model to run and visualize",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Export visualization as HTML",
+    ),
+    show_all: bool = typer.Option(
+        False,
+        "--all", "-a",
+        help="Run all models and compare",
+    ),
+) -> None:
+    """Run model and visualize results in one step.
+
+    Examples:
+        congestion-pricing visualize scenario.yaml --model abm
+        congestion-pricing visualize scenario.yaml --all
+    """
+    import yaml
+    import webbrowser
+    import tempfile
+
+    from congestion_pricing.models.base import ModelRegistry
+    from congestion_pricing.policy.scenario import Scenario
+    from congestion_pricing.visualization.dashboard import Dashboard
+
+    typer.echo(f"Loading scenario from {scenario_file}")
+
+    with open(scenario_file) as f:
+        scenario_data = yaml.safe_load(f)
+
+    scenario = Scenario.from_dict(scenario_data)
+
+    results = []
+
+    if show_all:
+        # Run all available models
+        from congestion_pricing import models as _
+
+        model_names = list(ModelRegistry.list_models())
+        typer.echo(f"Running {len(model_names)} models...")
+
+        for name in model_names:
+            typer.echo(f"  Running {name}...")
+            try:
+                model_class = ModelRegistry.get(name)
+                model_instance = model_class()
+                result = model_instance.run(scenario)
+                results.append(result)
+            except Exception as e:
+                typer.echo(f"    Failed: {e}", err=True)
+    else:
+        # Run single model
+        typer.echo(f"Running {model} model...")
+
+        model_class = ModelRegistry.get(model)
+        model_instance = model_class()
+        result = model_instance.run(scenario)
+        results.append(result)
+
+    # Create dashboard
+    typer.echo("Generating visualization...")
+    dash = Dashboard(results, title=f"Results: {scenario.name}")
+    dash.generate_figures()
+
+    # Output
+    if output:
+        dash.to_html(output)
+        typer.echo(f"Visualization saved to {output}")
+        webbrowser.open(f"file://{output.absolute()}")
+    else:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".html",
+            delete=False,
+        ) as f:
+            output_path = Path(f.name)
+
+        dash.to_html(output_path)
+        typer.echo(f"Opening visualization...")
+        webbrowser.open(f"file://{output_path.absolute()}")
+
+
 def main():
     """Entry point for the CLI."""
     # Ensure models are registered

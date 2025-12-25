@@ -51,7 +51,9 @@ ml = [
 viz = [
     "matplotlib>=3.8",
     "plotly>=5.18",
-    "streamlit>=1.28",
+    "dash>=2.14",
+    "dash-bootstrap-components>=1.5",
+    "kaleido>=0.2",
 ]
 all = [
     "congestion-pricing[dev,ml,viz]",
